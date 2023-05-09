@@ -150,4 +150,111 @@ ssh vagrant@<VM IP>
 exit
 ```
 
+## Connecting Contoller to Agent Nodes
+
+1. Firstly we need to ssh into our controller and change directories
+
+```
+cd /etc/ansible/
+
+ls
+```
+ 
+2. If we look at the files in this directory we should have cfg file and hosts. Using the following command we can see the layout of our directory more clearly.
+
+```
+sudo apt install tree
+
+tree
+```
+
+3. The following command will show the links the controller has with its nodes, we havent configured these yet so when we run this we should initially get an error.
+
+```
+sudo ansible all -m ping
+```
+
+4. Before we connect them we want to make sure our web and db networks are working so can ssh into both and perform updates and upgrades from our controller as so, ssh into web and provide password : 
+
+```
+ssh vagrant@192.168.33.10
+
+sudo apt update -y && sudo apt upgrade -y
+
+exit
+```
+Now do the same for the db:
+
+```
+ssh vagrant@192.168.33.11
+
+sudo apt update -y && sudo apt upgrade -y
+
+exit
+```
+
+Shows the network provided by the local host is working. 
+
+## Setting up agent nodes
+
+within `/etc/ansible/` we need to create a group for our nodes.
+
+```
+sudo nano hosts 
+```
+
+Within this file and:
+
+```
+[web]
+192.168.33.10 ansible_connection=ssh ansible_ssh_user=vagrant ansible_ssh_pass=vagrant
+```
+
+Now when we run 
+
+```
+sudo ansible all -m ping
+```
+
+![](img1.png)
+
+We should get green success message with a response of "pong", to add the db group follow the same convention as web but we need to ammend the config file with:
+
+
+```
+sudo nano ansible.cfg 
+``` 
+
+then add (NEVER DO THIS IN LIVE ENVIRONMENT)
+
+```
+host_key_checking = false
+```
+
+```
+sudo nano hosts 
+```
+
+Create a group 
+
+```
+[db]
+192.168.33.11 ansible_connection=ssh ansible_ssh_user=vagrant ansible_ssh_pass=vagrant
+```
+
+![](img2.png)
+
+#### Communticating with different nodes
+
+1. This will tell you the date within the nodes
+
+```
+sudo ansible all -a "date"
+```
+
+2. to send a file from the controller to a specific node we can use ad hoc commands like:
+
+```
+sudo ansible web -m copy -a "src=/etc/ansible/testing.txt dest=/home/vagrant"
+```
 
