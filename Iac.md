@@ -258,3 +258,113 @@ sudo ansible all -a "date"
 sudo ansible web -m copy -a "src=/etc/ansible/testing.txt dest=/home/vagrant"
 ```
 
+### Create PlayBook 
+
+1. Firstly we need to create a YAML playbook file with:
+
+```
+sudo nano install-nginx-playbook.yml
+```
+
+2. Within this file add these lines of code:
+
+```
+# Creating a playbook to install nginx in web server 
+
+# YAML file starts ---
+---
+
+# where would you like to install nginx
+- hosts: web
+
+# would you like to see logs
+  gather_facts: yes
+
+# do we need admin access - sudo
+  become: true
+
+# add the instructions - commands
+  tasks:
+  - name: Install nginx in web-server
+
+
+    apt: pkg=nginx state=present
+# ensure status is running/active
+```
+3. We can now run the playbook with the following command:
+
+```
+sudo ansible-playbook install-nginx-playbook.yml 
+```
+
+If this is successful we should see this 
+
+![](img3.png)
+
+Or we can check it by communicationg with the node to run a status check with:
+
+```
+sudo ansible web -a "systemctl status nginx"
+``` 
+
+This will should give us a green "active (running)" response.
+
+
+## Creating a playbook to run the sparta global app 
+
+1. first we need to make a yaml file to install the dependencies to launch the app
+
+```
+sudo nano install-nodejs-playbook.yml
+```
+
+Similarly to the above section we can add this to the file:
+
+```
+# YAML file starts ---
+---
+
+# where would you like to install nodejs
+- hosts: web
+
+# would you like to see logs
+  gather_facts: yes
+
+# do we need admin access - sudo
+  become: true
+
+# add the instructions - commands
+  tasks:
+  - name: Install Python in web-server
+
+
+    apt: pkg=python state=present
+
+  - name: Install node in web-server
+
+
+    apt: pkg=nodejs state=present
+
+  - name: Install npm in web-server
+
+
+    apt: pkg=npm state=present
+```
+
+2. On a fresh bash terminal we need to secure copy the app folder from our local host the web VM:
+
+```
+scp -r /Users/reispinnock/Documents/SpartaGlobal/tech221_virtualisation/app vagrant@<your_VM_IP>:/home/vagrant
+```
+
+3. Ammend the YAML file to include commands to launch the app
+
+```
+# start the app
+  - name: Start the application
+    command:
+      chdir: /home/vagrant/app
+      cmd: npm start &
+```
+
+
