@@ -423,3 +423,158 @@ sudo ansible db -a "systemctl status mongodb"
 terminal should display a green active(running message)
 
 ![](img5.png)
+
+### Setting up End points (connecting web to db)
+
+1. Within the directory `/etc/ansible` on our controller, we want to access the db using:
+
+```
+ssh vagrant@192.168.33.11
+```
+
+2. We need to access the mongodb config file with:
+
+```
+cd /etc
+
+sudo nano mongodb.conf
+```
+
+3. Edit the BindIP to be `0.0.0.0`
+<br>
+4. We need to restart and enable Mongodb so this change takes place
+
+```
+sudo systemctl restart mongodb
+
+sudo systemctl enable mongodb
+```
+
+This is all we need to configure in the DB
+
+5. We now need to access the web node with (password = vagrant):
+
+```
+ssh vagrant@192.168.33.10
+```
+
+6. We now need to create a persistant Environment variable
+
+```
+export DB_HOST=mongodb://192.168.33.11:27017/posts
+```
+
+we can check its persistant with 
+
+```
+printenv DB_HOST
+```
+
+This should print the env variable
+
+7. Now we need to change directory and launch the app 
+
+```
+cd app
+
+npm install
+
+npm start
+```
+
+8. Navigate to web broswer and input `[web_ip]:3000/posts`, and you should see the db has seeded the app.
+
+![](img6.png)
+
+### Setting up Endpoints with playbooks 
+
+##### DB Playbook 
+
+1. within the controller node and directory `/etc/ansible`, we create a new playbook with:
+
+```
+sudo nano mongo-db-conf-playbook.yml
+```
+
+2. Within this file we add:
+
+```
+# playbook to conf mongodb to machine
+---
+
+- hosts: db
+
+  gather_facts: yes
+
+  become: true
+
+# commands to change bindIP to 0.0.0.0
+
+  tasks:
+
+  - name: change bind_ip in mongodb.conf
+    lineinfile:
+      path: /etc/mongodb.conf
+      regexp: 'bind_ip = 1.0.0.0'
+      line: 'bind_ip = 0.0.0.0'
+      backrefs: yes
+```
+
+Where the `regexp` is the line of code we want to ammend from the playbook.
+
+3. Now we need to make a new playbook to add an environment variable within the web 
+
+```
+sudo nano  web-db-playbook.yml
+```
+
+4. Within this file we can add this code:
+
+```
+# playbook to configure web to connect to db
+---
+
+- hosts: web
+
+
+  gather_facts: yes
+
+
+  become: true
+
+# commands to configure mongodb.conf
+
+  tasks:
+  - name: add environment variable
+    shell: export DB_HOST=mongodb://192.168.33.11:27017/posts
+  ```
+
+5. save both these files, and then run them both:
+
+```
+sudo ansible-playbook mongo-db-conf-playbook.yml
+
+sudo ansible-playbook web-db-playbook.yml
+```
+
+6. We now need to access the web node with (password = vagrant):
+
+```
+ssh vagrant@192.168.33.10
+```
+7. We can then manually launch the app
+
+```
+cd app
+
+npm install
+
+npm start
+```
+
+8. Navigate to web broswer and input `[web_ip]:3000/posts`, and you should see the db has seeded the app.
+
+![](img6.png)
+
+
+  
