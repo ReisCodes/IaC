@@ -546,7 +546,12 @@ sudo nano  web-db-playbook.yml
 
   tasks:
   - name: add environment variable
-    shell: export DB_HOST=mongodb://192.168.33.11:27017/posts
+    shell: echo 'export DB_HOST=mongodb://192.168.33.11:27017/posts' >> /home/vagrant/.bashrc
+
+  - name: restart .bashrc
+    shell: source /home/vagrant/.bashrc && source .bashrc
+    args:
+      executable: /bin/bash
   ```
 
 5. save both these files, and then run them both:
