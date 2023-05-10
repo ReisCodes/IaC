@@ -367,4 +367,59 @@ scp -r /Users/reispinnock/Documents/SpartaGlobal/tech221_virtualisation/app vagr
       cmd: npm start &
 ```
 
+4. Start the playbook with 
 
+```
+sudo ansible-playbook install-nodejs-playbook.yml 
+```
+
+### Connecting other node to mongodb
+
+1. Create a new playbook yaml file to install mongodb
+
+```
+sudo nano mongo-db-playbook.yml
+```
+
+2. Within this file add this script
+
+```
+# YAML file starts
+---
+
+# Where do we want to install mongodb
+- hosts: db
+
+# Would you like to see logs
+  gather_facts: yes
+
+# Do we need admin access - sudo 
+  become: true
+
+# Add instructions - commands
+  tasks:
+  - name: configuring Mongo-db in db agent node
+    apt: pkg=mongodb
+
+# Ensure status is running/active
+```
+
+3. Run this playbook with:
+
+```
+sudo ansible-playbook mongo-db-playbook.yml
+```
+
+should see this output
+
+![](img4.png)
+
+4. Check the status of mongodb with:
+
+```
+sudo ansible db -a "systemctl status mongodb"
+```
+
+terminal should display a green active(running message)
+
+![](img5.png)
